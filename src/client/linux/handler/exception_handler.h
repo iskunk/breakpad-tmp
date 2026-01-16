@@ -197,7 +197,11 @@ class ExceptionHandler {
     siginfo_t siginfo;
     pid_t tid;  // the crashing thread.
     ucontext_t context;
-#if GOOGLE_BREAKPAD_CRASH_CONTEXT_HAS_FLOAT_STATE
+#if defined(__powerpc64__)
+    // PPC64's FP state is a part of ucontext_t like MIPS but the vector
+    // state is not, so a struct is needed.
+    vstate_t vector_state;
+#elif GOOGLE_BREAKPAD_CRASH_CONTEXT_HAS_FLOAT_STATE
     fpstate_t float_state;
 #endif
   };

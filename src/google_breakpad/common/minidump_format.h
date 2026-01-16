@@ -686,6 +686,9 @@ typedef enum {
   MD_CPU_ARCHITECTURE_MIPS64    = 0x8004, /* Breakpad-defined value for MIPS64 */
   MD_CPU_ARCHITECTURE_RISCV     = 0x8005, /* Breakpad-defined value for RISCV */
   MD_CPU_ARCHITECTURE_RISCV64   = 0x8006, /* Breakpad-defined value for RISCV64 */
+  MD_CPU_ARCHITECTURE_LOONGARCH32  = 0x8007, /* Breakpad-defined value for LoongArch32(S) */
+  MD_CPU_ARCHITECTURE_LOONGARCH32R = 0x8008, /* Breakpad-defined value for LoongArch32R */
+  MD_CPU_ARCHITECTURE_LOONGARCH64  = 0x8009, /* Breakpad-defined value for LoongArch64 */
   MD_CPU_ARCHITECTURE_UNKNOWN   = 0xffff  /* PROCESSOR_ARCHITECTURE_UNKNOWN */
 } MDCPUArchitecture;
 

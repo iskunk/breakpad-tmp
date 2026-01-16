@@ -80,6 +80,10 @@
   #define ELF_ARCH  EM_MIPS
 #elif defined(__aarch64__)
   #define ELF_ARCH  EM_AARCH64
+#elif defined(__loongarch__)
+  #define ELF_ARCH  EM_LOONGARCH64
+#elif defined(__powerpc64__)
+  #define ELF_ARCH  EM_PPC64
 #elif defined(__riscv)
   #define ELF_ARCH  EM_RISCV
 #endif
@@ -92,6 +96,8 @@ typedef user_regs user_regs_struct;
 #elif defined (__mips__) || defined(__riscv)
 // This file-local typedef simplifies the source code.
 typedef gregset_t user_regs_struct;
+#elif defined(__powerpc64__)
+typedef struct pt_regs user_regs_struct;
 #endif
 
 using google_breakpad::MDTypeHelper;
@@ -311,7 +317,7 @@ struct CrashedProcess {
 
   struct Thread {
     pid_t tid;
-#if defined(__mips__) || defined(__riscv)
+#if defined(__mips__) || defined(__powerpc64__) || defined(__riscv)
     mcontext_t mcontext;
 #else
     user_regs_struct regs;
@@ -567,6 +573,8 @@ ParseThreadRegisters(CrashedProcess::Thread* thread,
   thread->mcontext.fpc_eir = rawregs->float_save.fir;
 #endif
 }
+#elif defined(__powerpc64__)
+# error "Need PPC64 implementation."
 #elif defined(__riscv)
 static void
 ParseThreadRegisters(CrashedProcess::Thread* thread,
@@ -717,6 +725,12 @@ ParseSystemInfo(const Options& options, CrashedProcess* crashinfo,
 # else
 #  error "This mips ABI is currently not supported (n32)"
 # endif
+#elif defined(__powerpc64__)
+  if (sysinfo->processor_architecture != MD_CPU_ARCHITECTURE_PPC64) {
+    fprintf(stderr,
+            "This version of minidump-2-core only supports PPC64.\n");
+    exit(1);
+  }
 #elif defined(__riscv)
 # if __riscv_xlen == 32
   if (sysinfo->processor_architecture != MD_CPU_ARCHITECTURE_RISCV) {

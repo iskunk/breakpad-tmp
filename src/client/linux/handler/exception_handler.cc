@@ -466,6 +466,13 @@ bool ExceptionHandler::HandleSignal(int /*sig*/, siginfo_t* info, void* uc) {
     memcpy(&g_crash_context_.float_state, fp_ptr,
            sizeof(g_crash_context_.float_state));
   }
+#elif defined(__powerpc64__)
+  // On PPC64, we must copy VR state
+  ucontext_t* uc_ptr = (ucontext_t*)uc;
+  if (uc_ptr->uc_mcontext.v_regs) {
+    memcpy(&g_crash_context_.vector_state, uc_ptr->uc_mcontext.v_regs,
+           sizeof(g_crash_context_.vector_state));
+  }
 #elif GOOGLE_BREAKPAD_CRASH_CONTEXT_HAS_FLOAT_STATE
   ucontext_t* uc_ptr = (ucontext_t*)uc;
   if (uc_ptr->uc_mcontext.fpregs) {
@@ -704,10 +711,18 @@ bool ExceptionHandler::WriteMinidump() {
   }
 #endif
 
-#if GOOGLE_BREAKPAD_CRASH_CONTEXT_HAS_FLOAT_STATE && !defined(__aarch64__)
+#if GOOGLE_BREAKPAD_CRASH_CONTEXT_HAS_FLOAT_STATE && \
+    !defined(__aarch64__) && !defined(__powerpc64__)
   memcpy(&context.float_state, context.context.uc_mcontext.fpregs,
          sizeof(context.float_state));
 #endif
+
+#if defined(__powerpc64__)
+  // Vector registers must be copied on PPC64
+  memcpy(&context.vector_state, context.context.uc_mcontext.v_regs,
+         sizeof(context.vector_state));
+#endif
+
   context.tid = sys_gettid();
 
   // Add an exception stream to the minidump for better reporting.
@@ -728,6 +743,9 @@ bool ExceptionHandler::WriteMinidump() {
 #elif defined(__mips__)
   context.siginfo.si_addr =
       reinterpret_cast<void*>(context.context.uc_mcontext.pc);
+#elif defined(__powerpc64__)
+  context.siginfo.si_addr =
+      reinterpret_cast<void*>(context.context.uc_mcontext.gp_regs[PT_NIP]);
 #elif defined(__riscv)
   context.siginfo.si_addr =
       reinterpret_cast<void*>(context.context.uc_mcontext.__gregs[REG_PC]);

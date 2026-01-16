@@ -144,7 +144,9 @@ class MicrodumpWriter {
                   const MicrodumpExtraInfo& microdump_extra_info,
                   LinuxDumper* dumper)
       : ucontext_(context ? &context->context : nullptr),
-#if GOOGLE_BREAKPAD_CRASH_CONTEXT_HAS_FLOAT_STATE
+#if defined(__powerpc64__)
+        vector_state_(context ? &context->vector_state : nullptr),
+#elif GOOGLE_BREAKPAD_CRASH_CONTEXT_HAS_FLOAT_STATE
         float_state_(context ? &context->float_state : nullptr),
 #endif
         dumper_(dumper),
@@ -343,6 +345,8 @@ class MicrodumpWriter {
 # else
 #  error "This mips ABI is currently not supported (n32)"
 # endif
+#elif defined(__powerpc64__)
+    const char kArch[] = "ppc64";
 #elif defined(__riscv)
 # if __riscv_xlen == 32
     const char kArch[] = "riscv32";
@@ -423,7 +427,9 @@ class MicrodumpWriter {
   void DumpCPUState() {
     RawContextCPU cpu;
     my_memset(&cpu, 0, sizeof(RawContextCPU));
-#if GOOGLE_BREAKPAD_CRASH_CONTEXT_HAS_FLOAT_STATE
+#if defined(__powerpc64__)
+    UContextReader::FillCPUContext(&cpu, ucontext_, vector_state_);
+#elif GOOGLE_BREAKPAD_CRASH_CONTEXT_HAS_FLOAT_STATE
     UContextReader::FillCPUContext(&cpu, ucontext_, float_state_);
 #else
     UContextReader::FillCPUContext(&cpu, ucontext_);
@@ -622,7 +628,9 @@ class MicrodumpWriter {
   }
 
   const ucontext_t* const ucontext_;
-#if GOOGLE_BREAKPAD_CRASH_CONTEXT_HAS_FLOAT_STATE
+#if defined(__powerpc64__)
+  const google_breakpad::vstate_t* const vector_state_;
+#elif GOOGLE_BREAKPAD_CRASH_CONTEXT_HAS_FLOAT_STATE
   const google_breakpad::fpstate_t* const float_state_;
 #endif
   LinuxDumper* dumper_;

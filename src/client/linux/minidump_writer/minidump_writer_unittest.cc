@@ -720,6 +720,9 @@ TEST(MinidumpWriterTest, InvalidStackPointer) {
 #elif defined(__mips__)
   context.context.uc_mcontext.gregs[MD_CONTEXT_MIPS_REG_SP] =
       invalid_stack_pointer;
+#elif defined(__powerpc64__)
+  context.context.uc_mcontext.gp_regs[MD_CONTEXT_PPC64_REG_SP] =
+      invalid_stack_pointer;
 #elif defined(__riscv)
   context.context.uc_mcontext.__gregs[MD_CONTEXT_RISCV_REG_SP] =
       invalid_stack_pointer;

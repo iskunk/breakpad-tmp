@@ -466,6 +466,9 @@ TEST(LinuxPtraceDumperTest, VerifyStackReadWithMultipleThreads) {
 #elif defined(__mips__)
     pid_t* process_tid_location =
         reinterpret_cast<pid_t*>(one_thread.mcontext.gregs[1]);
+#elif defined(__powerpc64__)
+    pid_t* process_tid_location =
+        reinterpret_cast<pid_t*>(one_thread.mcontext.gp_regs[8]);
 #elif defined(__riscv)
     pid_t* process_tid_location =
         reinterpret_cast<pid_t*>(one_thread.mcontext.__gregs[4]);
@@ -566,6 +569,8 @@ TEST_F(LinuxPtraceDumperTest, SanitizeStackCopy) {
   uintptr_t heap_addr = thread_info.regs.rcx;
 #elif defined(__mips__)
   uintptr_t heap_addr = thread_info.mcontext.gregs[1];
+#elif defined(__powerpc64__)
+  uintptr_t heap_addr = thread_info.mcontext.gp_regs[8];
 #elif defined(__riscv)
   uintptr_t heap_addr = thread_info.mcontext.__gregs[4];
 #else

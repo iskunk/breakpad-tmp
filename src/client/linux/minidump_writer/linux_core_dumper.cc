@@ -115,6 +115,9 @@ bool LinuxCoreDumper::GetThreadInfoByIndex(size_t index, ThreadInfo* info) {
 #elif defined(__mips__)
   stack_pointer =
       reinterpret_cast<uint8_t*>(info->mcontext.gregs[MD_CONTEXT_MIPS_REG_SP]);
+#elif defined(__powerpc64__)
+  stack_pointer =
+      reinterpret_cast<uint8_t*>(info->mcontext.gp_regs[MD_CONTEXT_PPC64_REG_SP]);
 #elif defined(__riscv)
     stack_pointer = reinterpret_cast<uint8_t*>(
         info->mcontext.__gregs[MD_CONTEXT_RISCV_REG_SP]);
@@ -224,6 +227,9 @@ bool LinuxCoreDumper::EnumerateThreads() {
         info.mcontext.mdlo = status->pr_reg[EF_LO];
         info.mcontext.mdhi = status->pr_reg[EF_HI];
         info.mcontext.pc = status->pr_reg[EF_CP0_EPC];
+#elif defined(__powerpc64__)
+        for (int i = 0; i < 31; i++)
+          info.mcontext.gp_regs[i] = status->pr_reg[i];
 #elif defined(__riscv)
         memcpy(&info.mcontext.__gregs, status->pr_reg,
                sizeof(info.mcontext.__gregs));

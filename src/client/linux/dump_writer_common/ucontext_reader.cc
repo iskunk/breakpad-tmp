@@ -258,6 +258,14 @@ void UContextReader::FillCPUContext(RawContextCPU* out, const ucontext_t* uc) {
 #endif
 }
 
+#elif defined(__loongarch__)
+
+# error "Need LoongArch implementation."
+
+#elif defined(__powerpc64__)
+
+# error "Need PPC64 implementation."
+
 #elif defined(__riscv)
 
 uintptr_t UContextReader::GetStackPointer(const ucontext_t* uc) {

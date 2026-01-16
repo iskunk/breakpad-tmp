@@ -55,6 +55,8 @@
 #define TID_PTR_REGISTER "rcx"
 #elif defined(__mips__)
 #define TID_PTR_REGISTER "$1"
+#elif defined(__powerpc64__)
+#define TID_PTR_REGISTER "r8"
 #elif defined(__riscv)
 #define TID_PTR_REGISTER "x4"
 #else

@@ -581,6 +581,8 @@ const unsigned char kIllegalInstruction[] = {
 #if defined(__mips__)
   // mfc2 zero,Impl - usually illegal in userspace.
   0x48, 0x00, 0x00, 0x48
+#elif defined(__powerpc64__)
+  0x01, 0x01, 0x01, 0x01  // Crashes on a tested POWER9 cpu
 #else
   // This crashes with SIGILL on x86/x86-64/arm.
   0xff, 0xff, 0xff, 0xff

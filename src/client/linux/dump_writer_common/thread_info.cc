@@ -274,6 +274,14 @@ void ThreadInfo::FillCPUContext(RawContextCPU* out) const {
 #endif
 }
 
+#elif defined(__loongarch__)
+
+# error "Need LoongArch implementation"
+
+#elif defined(__powerpc64__)
+
+# error "Need PPC64 implementation"
+
 #elif defined(__riscv)
 
 uintptr_t ThreadInfo::GetInstructionPointer() const {
@@ -345,6 +353,11 @@ void ThreadInfo::GetGeneralPurposeRegisters(void** gp_regs, size_t* size) {
     *gp_regs = mcontext.gregs;
   if (size)
     *size = sizeof(mcontext.gregs);
+#elif defined(__powerpc64__)
+  if (gp_regs)
+    *gp_regs = mcontext.gp_regs;
+  if (size)
+    *size = sizeof(mcontext.gp_regs);
 #elif defined(__riscv)
   if (gp_regs)
     *gp_regs = mcontext.__gregs;
@@ -365,6 +378,11 @@ void ThreadInfo::GetFloatingPointRegisters(void** fp_regs, size_t* size) {
     *fp_regs = &mcontext.fpregs;
   if (size)
     *size = sizeof(mcontext.fpregs);
+#elif defined(__powerpc64__)
+  if (fp_regs)
+    *fp_regs = &mcontext.fp_regs;
+  if (size)
+    *size = sizeof(mcontext.fp_regs);
 #elif defined(__riscv)
 # if __riscv_flen == 32
   if (fp_regs)
@@ -391,5 +409,14 @@ void ThreadInfo::GetFloatingPointRegisters(void** fp_regs, size_t* size) {
     *size = sizeof(fpregs);
 #endif
 }
+
+#if defined(__powerpc64__)
+void ThreadInfo::GetVectorRegisters(void** v_regs, size_t* size) {
+    if (v_regs)
+        *v_regs = &vregs;
+    if (size)
+        *size = sizeof(vregs);
+}
+#endif
 
 }  // namespace google_breakpad

@@ -145,7 +145,9 @@ class MinidumpWriter {
       : fd_(minidump_fd),
         path_(minidump_path),
         ucontext_(context ? &context->context : nullptr),
-#if GOOGLE_BREAKPAD_CRASH_CONTEXT_HAS_FLOAT_STATE
+#if defined(__powerpc64__)
+        vector_state_(context ? &context->vector_state : nullptr),
+#elif GOOGLE_BREAKPAD_CRASH_CONTEXT_HAS_FLOAT_STATE
         float_state_(context ? &context->float_state : nullptr),
 #endif
         dumper_(dumper),
@@ -477,7 +479,9 @@ class MinidumpWriter {
         if (!cpu.Allocate())
           return false;
         my_memset(cpu.get(), 0, sizeof(RawContextCPU));
-#if GOOGLE_BREAKPAD_CRASH_CONTEXT_HAS_FLOAT_STATE
+#if defined(__powerpc64__)
+        UContextReader::FillCPUContext(cpu.get(), ucontext_, vector_state_);
+#elif GOOGLE_BREAKPAD_CRASH_CONTEXT_HAS_FLOAT_STATE
         UContextReader::FillCPUContext(cpu.get(), ucontext_, float_state_);
 #else
         UContextReader::FillCPUContext(cpu.get(), ucontext_);
@@ -957,7 +961,8 @@ class MinidumpWriter {
     dirent->location.rva = 0;
   }
 
-#if defined(__i386__) || defined(__x86_64__) || defined(__mips__)
+#if defined(__i386__) || defined(__x86_64__) || defined(__mips__) || \
+    defined(__powerpc64__)
   bool WriteCPUInformation(MDRawSystemInfo* sys_info) {
     char vendor_id[sizeof(sys_info->cpu.x86_cpu_info.vendor_id) + 1] = {0};
     static const char vendor_id_name[] = "vendor_id";
@@ -987,6 +992,22 @@ class MinidumpWriter {
 #endif
 #elif defined(__i386__)
         MD_CPU_ARCHITECTURE_X86;
+#elif defined(__loongarch__)
+# if defined(__loongarch_lp64)
+        MD_CPU_ARCHITECTURE_LOONGARCH64;
+# else
+#  error "Unsupported LoongArch variant"
+# endif
+#elif defined(__powerpc64__)
+        MD_CPU_ARCHITECTURE_PPC64;
+#elif defined(__riscv)
+# if __riscv_xlen == 32
+        MD_CPU_ARCHITECTURE_RISCV;
+# elif __riscv_xlen == 64
+        MD_CPU_ARCHITECTURE_RISCV64;
+# else
+#  error "Unrecognized RISC-V variant"
+# endif
 #else
         MD_CPU_ARCHITECTURE_AMD64;
 #endif
@@ -1446,7 +1467,9 @@ class MinidumpWriter {
   const char* path_;  // Path to the file where the minidum should be written.
 
   const ucontext_t* const ucontext_;  // also from the signal handler
-#if GOOGLE_BREAKPAD_CRASH_CONTEXT_HAS_FLOAT_STATE
+#if defined(__powerpc64__)
+  const google_breakpad::vstate_t* const vector_state_;
+#elif GOOGLE_BREAKPAD_CRASH_CONTEXT_HAS_FLOAT_STATE
   const google_breakpad::fpstate_t* const float_state_;  // ditto
 #endif
   LinuxDumper* dumper_;
